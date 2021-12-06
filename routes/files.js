@@ -19,6 +19,7 @@ let upload = multer({
     }
 }).single('myfile')
 
+// file upload endpoint
 router.post('/files', (req, res) => {
     // store file in uploads
     upload(req, res, async (err) => {
@@ -51,22 +52,36 @@ router.post('/files', (req, res) => {
     })
 })
 
+
+// download details endpoint
 router.get('/files/:uuid', async (req, res) => {
     try{
-        const file = await File.findOne({uuid:req.params})
+        const file = await File.findOne({uuid:req.params.uuid})
+        
         if(!file){
             return res.render('download', {error: 'File not found'})    
         }
-
+        
         return res.render('download', {
             uuid: file.uuid,
-            filename: file.filename,
+            fileName: file.filename,
             fileSize: file.size,
-            download: `${process.env.APP_BASE_URL}/files/download/${file.uuid}`
+            downloadLink: `${process.env.APP_BASE_URL}/files/download/${file.uuid}`
         })
+
     }catch(err){
         return res.render('download', {error: 'Something went wrong'})
     }
+})
+
+// download link
+router.get('/files/download/:uuid', async (req, res)=> {
+    const file = await File.findOne({uuid: req.params.uuid})
+    if(!file){
+        return res.render('download', {error: 'Link has been expired'})
+    }
+    const filePath = `${__dirname}/../${file.path}`
+    res.download(filePath)
 })
 
 module.exports = router

@@ -5,6 +5,8 @@ const connectDB = require('./config/db')
 const files = require('./routes/files')
 
 const PORT = process.env.PORT || 8000
+
+app.use(express.static('public'))
 // template engine
 app.set('views', path.join(__dirname, '/views'))
 app.set('view engine', 'ejs')
