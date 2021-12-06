@@ -2,8 +2,6 @@ const router = require('express').Router()
 const multer = require('multer')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
-const file = require('../models/file')
-
 const File = require('../models/file')
 
 let storage = multer.diskStorage({
@@ -51,6 +49,24 @@ router.post('/files', (req, res) => {
             file:  `${process.env.APP_BASE_URL}/files/${response.uuid}`
         })
     })
+})
+
+router.get('/files/:uuid', async (req, res) => {
+    try{
+        const file = await File.findOne({uuid:req.params})
+        if(!file){
+            return res.render('download', {error: 'File not found'})    
+        }
+
+        return res.render('download', {
+            uuid: file.uuid,
+            filename: file.filename,
+            fileSize: file.size,
+            download: `${process.env.APP_BASE_URL}/files/download/${file.uuid}`
+        })
+    }catch(err){
+        return res.render('download', {error: 'Something went wrong'})
+    }
 })
 
 module.exports = router
