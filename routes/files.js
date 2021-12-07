@@ -3,6 +3,8 @@ const multer = require('multer')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
 const File = require('../models/file')
+const sendMail = require('../services/emailService')
+const emailTemplate = require('../services/emailTemplate')
 
 let storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -81,7 +83,53 @@ router.get('/files/download/:uuid', async (req, res)=> {
         return res.render('download', {error: 'Link has been expired'})
     }
     const filePath = `${__dirname}/../${file.path}`
-    res.download(filePath)
+    res.download(filePath )
+})
+
+// email send endpoint
+router.post('/files/send', async (req, res) => {
+    const {uuid, emailTo, emailFrom } = req.body
+
+    if(!uuid || !emailTo || !emailFrom){
+        return res.status(422).send({
+            error: "All fields are required"
+        })
+    }
+
+    // Get data from db
+    const file = await File.findOne({
+        uuid: uuid
+    })
+
+    if(file.sender){
+        return res.status(422).send({
+            error: "Email already sent"
+        })
+    }
+
+    file.sender = emailFrom
+    file.receiver = emailTo
+
+    const response = await file.save()
+
+    // send email
+    sendMail({
+        from: emailFrom,
+        to: emailTo,
+        subject: 'FileShare',
+        text: `${emailFrom} shared a file with you`,
+        html: emailTemplate({
+            emailFrom: emailFrom,
+            downloadLink: `${process.env.APP_BASE_URL}/api/files/download/${uuid}`,
+            size: parseInt(file.size/1000) + 'KB',
+            expires: '24 hours'
+        })
+    })
+    // http://localhost:8000/api/files/download/89677071-a37c-477d-a4d5-1d4addf81240
+
+    return res.send({
+        success: true
+    })
 })
 
 module.exports = router
