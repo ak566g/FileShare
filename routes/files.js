@@ -125,8 +125,7 @@ router.post('/files/send', async (req, res) => {
             expires: '24 hours'
         })
     })
-    // http://localhost:8000/api/files/download/89677071-a37c-477d-a4d5-1d4addf81240
-
+    
     return res.send({
         success: true
     })
