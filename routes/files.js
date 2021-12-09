@@ -31,7 +31,7 @@ router.post('/files', (req, res) => {
                 error: err.message
             })
         }
-        console.log(req.file)
+        // console.log(req.file)
         if(!req.file){
             return res.json({
                 error: "All fields are required"
@@ -49,7 +49,7 @@ router.post('/files', (req, res) => {
         // response --> download link
         const response = await file.save()
         return res.json({
-            file:  `${process.env.APP_BASE_URL}/files/${response.uuid}`
+            file:  `${process.env.APP_BASE_URL}/api/files/download/${response.uuid}`
         })
     })
 })
@@ -83,7 +83,7 @@ router.get('/files/download/:uuid', async (req, res)=> {
         return res.render('download', {error: 'Link has been expired'})
     }
     const filePath = `${__dirname}/../${file.path}`
-    res.download(filePath )
+    res.download(filePath)
 })
 
 // email send endpoint
